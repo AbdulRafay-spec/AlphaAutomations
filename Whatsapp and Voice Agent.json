@@ -1,0 +1,261 @@
+{
+  "name": "Whatsapp and OpenAI Bot",
+  "nodes": [
+    {
+      "parameters": {
+        "updates": [
+          "messages"
+        ],
+        "options": {}
+      },
+      "type": "n8n-nodes-base.whatsAppTrigger",
+      "typeVersion": 1,
+      "position": [
+        0,
+        0
+      ],
+      "id": "a91628b9-4cc5-4351-8e47-daa12407c2d8",
+      "name": "WhatsApp Trigger",
+      "webhookId": "80343947-e817-4a41-8d52-77671c9259bf",
+      "credentials": {
+        "whatsAppTriggerApi": {
+          "id": "AltDm97XmxJfA429",
+          "name": "WhatsApp OAuth account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "resource": "audio",
+        "operation": "transcribe",
+        "options": {
+          "language": ""
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.openAi",
+      "typeVersion": 1.8,
+      "position": [
+        672,
+        0
+      ],
+      "id": "2e8fd564-fa21-4e32-9229-2a2669e6e864",
+      "name": "Transcribe a recording",
+      "credentials": {
+        "openAiApi": {
+          "id": "eyf0kX1gy8lVBtzS",
+          "name": "New OpenAI"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "url": "=https://graph.facebook.com/v19.0/{{ $json.messages[0].audio.id }}\n",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        224,
+        0
+      ],
+      "id": "258e1657-8d48-4df6-9489-bb981dacfbc7",
+      "name": "HTTP Request",
+      "credentials": {
+        "httpHeaderAuth": {
+          "id": "V24XDUmm0qvV73Zg",
+          "name": "Header Auth account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "url": "={{ $json.url }}",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "options": {
+          "response": {
+            "response": {
+              "responseFormat": "file"
+            }
+          }
+        }
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        448,
+        0
+      ],
+      "id": "eab53772-7ac1-4922-bdda-336106a0e188",
+      "name": "Returning Data Array",
+      "credentials": {
+        "httpHeaderAuth": {
+          "id": "V24XDUmm0qvV73Zg",
+          "name": "Header Auth account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "modelId": {
+          "__rl": true,
+          "value": "chatgpt-4o-latest",
+          "mode": "list",
+          "cachedResultName": "CHATGPT-4O-LATEST"
+        },
+        "messages": {
+          "values": [
+            {
+              "content": "={{ $json.text }}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.openAi",
+      "typeVersion": 1.8,
+      "position": [
+        80,
+        256
+      ],
+      "id": "b7c201f8-7a39-4611-9e5e-fd8aaf276dc9",
+      "name": "Message a model",
+      "credentials": {
+        "openAiApi": {
+          "id": "eyf0kX1gy8lVBtzS",
+          "name": "New OpenAI"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "resource": "audio",
+        "input": "={{ $json.message.content }}",
+        "options": {
+          "response_format": "opus"
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.openAi",
+      "typeVersion": 1.8,
+      "position": [
+        432,
+        256
+      ],
+      "id": "eaf345d8-df94-4fb8-9935-03e6d55d2ccc",
+      "name": "Generate audio",
+      "credentials": {
+        "openAiApi": {
+          "id": "eyf0kX1gy8lVBtzS",
+          "name": "New OpenAI"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "send",
+        "phoneNumberId": "740619442473226",
+        "recipientPhoneNumber": "={{ $('WhatsApp Trigger').item.json.messages[0].from }}",
+        "messageType": "audio",
+        "mediaPath": "useMedian8n",
+        "additionalFields": {}
+      },
+      "type": "n8n-nodes-base.whatsApp",
+      "typeVersion": 1,
+      "position": [
+        160,
+        496
+      ],
+      "id": "4d9d4754-2414-41c2-a682-2db682595ff5",
+      "name": "Send message",
+      "webhookId": "d0475f04-fc6d-47ab-a672-eb3de10a88fc",
+      "credentials": {
+        "whatsAppApi": {
+          "id": "6VXPjVeiTCJNjHrU",
+          "name": "WhatsApp Permanent Access Token"
+        }
+      }
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "WhatsApp Trigger": {
+      "main": [
+        [
+          {
+            "node": "HTTP Request",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "HTTP Request": {
+      "main": [
+        [
+          {
+            "node": "Returning Data Array",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Returning Data Array": {
+      "main": [
+        [
+          {
+            "node": "Transcribe a recording",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Transcribe a recording": {
+      "main": [
+        [
+          {
+            "node": "Message a model",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Message a model": {
+      "main": [
+        [
+          {
+            "node": "Generate audio",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Generate audio": {
+      "main": [
+        [
+          {
+            "node": "Send message",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "versionId": "a4b38f99-1f5e-4987-8b35-021360562062",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "ee80a005c9374c234e6c470491e25fa2a3c709e42586a97bb22dfa003dbc0db5"
+  },
+  "id": "p4fUdf5e1tco287l",
+  "tags": []
+}
