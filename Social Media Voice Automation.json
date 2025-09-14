@@ -1,0 +1,363 @@
+{
+  "name": "Whatsapp and OpenAI Bot",
+  "nodes": [
+    {
+      "parameters": {
+        "updates": [
+          "messages"
+        ],
+        "options": {}
+      },
+      "type": "n8n-nodes-base.whatsAppTrigger",
+      "typeVersion": 1,
+      "position": [
+        192,
+        0
+      ],
+      "id": "a91628b9-4cc5-4351-8e47-daa12407c2d8",
+      "name": "WhatsApp Trigger",
+      "webhookId": "80343947-e817-4a41-8d52-77671c9259bf",
+      "credentials": {
+        "whatsAppTriggerApi": {
+          "id": "AltDm97XmxJfA429",
+          "name": "WhatsApp OAuth account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "resource": "audio",
+        "operation": "transcribe",
+        "options": {
+          "language": ""
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.openAi",
+      "typeVersion": 1.8,
+      "position": [
+        688,
+        448
+      ],
+      "id": "2e8fd564-fa21-4e32-9229-2a2669e6e864",
+      "name": "Transcribe a recording",
+      "credentials": {
+        "openAiApi": {
+          "id": "eyf0kX1gy8lVBtzS",
+          "name": "New OpenAI"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "url": "={{ $json.url }}",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "options": {
+          "response": {
+            "response": {
+              "responseFormat": "file"
+            }
+          }
+        }
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        688,
+        304
+      ],
+      "id": "eab53772-7ac1-4922-bdda-336106a0e188",
+      "name": "Returning Data Array",
+      "credentials": {
+        "httpHeaderAuth": {
+          "id": "V24XDUmm0qvV73Zg",
+          "name": "Header Auth account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "modelId": {
+          "__rl": true,
+          "value": "chatgpt-4o-latest",
+          "mode": "list",
+          "cachedResultName": "CHATGPT-4O-LATEST"
+        },
+        "messages": {
+          "values": [
+            {
+              "content": "={{ $json.text }}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.openAi",
+      "typeVersion": 1.8,
+      "position": [
+        80,
+        256
+      ],
+      "id": "b7c201f8-7a39-4611-9e5e-fd8aaf276dc9",
+      "name": "Message a model",
+      "credentials": {
+        "openAiApi": {
+          "id": "eyf0kX1gy8lVBtzS",
+          "name": "New OpenAI"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "resource": "audio",
+        "input": "={{ $json.message.content }}",
+        "options": {
+          "response_format": "opus"
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.openAi",
+      "typeVersion": 1.8,
+      "position": [
+        432,
+        256
+      ],
+      "id": "eaf345d8-df94-4fb8-9935-03e6d55d2ccc",
+      "name": "Generate audio",
+      "credentials": {
+        "openAiApi": {
+          "id": "eyf0kX1gy8lVBtzS",
+          "name": "New OpenAI"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "send",
+        "phoneNumberId": "740619442473226",
+        "recipientPhoneNumber": "={{ $('WhatsApp Trigger').item.json.messages[0].from }}",
+        "messageType": "audio",
+        "mediaPath": "useMedian8n",
+        "additionalFields": {}
+      },
+      "type": "n8n-nodes-base.whatsApp",
+      "typeVersion": 1,
+      "position": [
+        160,
+        496
+      ],
+      "id": "4d9d4754-2414-41c2-a682-2db682595ff5",
+      "name": "Send message",
+      "webhookId": "d0475f04-fc6d-47ab-a672-eb3de10a88fc",
+      "credentials": {
+        "whatsAppApi": {
+          "id": "6VXPjVeiTCJNjHrU",
+          "name": "WhatsApp Permanent Access Token"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "url": "=https://graph.facebook.com/v19.0/{{ $json.messages[0].audio.id }}\n",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "options": {
+          "response": {
+            "response": {
+              "responseFormat": "json"
+            }
+          }
+        }
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        416,
+        0
+      ],
+      "id": "bd644d7c-447c-44eb-87eb-5538192367b2",
+      "name": "HTTP Request",
+      "credentials": {
+        "httpHeaderAuth": {
+          "id": "V24XDUmm0qvV73Zg",
+          "name": "Header Auth account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "url": "={{ $json.url }}",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "options": {
+          "response": {
+            "response": {
+              "responseFormat": "file"
+            }
+          }
+        }
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        624,
+        0
+      ],
+      "id": "4ecd7e37-5895-4364-8e35-97f73ef38b7c",
+      "name": "HTTP Request1",
+      "credentials": {
+        "httpHeaderAuth": {
+          "id": "V24XDUmm0qvV73Zg",
+          "name": "Header Auth account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "resource": "audio",
+        "operation": "transcribe",
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.openAi",
+      "typeVersion": 1.8,
+      "position": [
+        832,
+        0
+      ],
+      "id": "438b4b87-c684-442d-9584-170aff2cec49",
+      "name": "Transcribe a recording1",
+      "credentials": {
+        "openAiApi": {
+          "id": "eyf0kX1gy8lVBtzS",
+          "name": "New OpenAI"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://hook.eu2.make.com/jdxoo5iojvy638d718ivh30ycera2pbc",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"from\": \"{{ $('WhatsApp Trigger').item.json.messages[0].from }}\",\n\n  \"transcription\": \"{{ $json.text }}\",\n  \"duration_seconds\": \"{{ $json.usage.seconds }}\",\n  \"type\": \"{{ $json.usage.type }}\",\n  \"usage\": \"{{ $json.usage }}\"\n}\n",
+        "options": {
+          "response": {
+            "response": {
+              "responseFormat": "text"
+            }
+          }
+        }
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        1040,
+        0
+      ],
+      "id": "12beaca1-9d14-44dd-8489-05f49581af88",
+      "name": "HTTP Request2",
+      "credentials": {
+        "httpHeaderAuth": {
+          "id": "V24XDUmm0qvV73Zg",
+          "name": "Header Auth account"
+        }
+      }
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "WhatsApp Trigger": {
+      "main": [
+        [
+          {
+            "node": "HTTP Request",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Returning Data Array": {
+      "main": [
+        []
+      ]
+    },
+    "Transcribe a recording": {
+      "main": [
+        []
+      ]
+    },
+    "Message a model": {
+      "main": [
+        [
+          {
+            "node": "Generate audio",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Generate audio": {
+      "main": [
+        [
+          {
+            "node": "Send message",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Send message": {
+      "main": [
+        []
+      ]
+    },
+    "HTTP Request": {
+      "main": [
+        [
+          {
+            "node": "HTTP Request1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "HTTP Request1": {
+      "main": [
+        [
+          {
+            "node": "Transcribe a recording1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Transcribe a recording1": {
+      "main": [
+        [
+          {
+            "node": "HTTP Request2",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "versionId": "ff3bb642-b7ca-43d4-8b6c-a568308f9326",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "ee80a005c9374c234e6c470491e25fa2a3c709e42586a97bb22dfa003dbc0db5"
+  },
+  "id": "p4fUdf5e1tco287l",
+  "tags": []
+}
